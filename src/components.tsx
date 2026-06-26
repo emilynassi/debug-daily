@@ -67,7 +67,8 @@ export function CodeBlock({ code, label, accent }: CodeBlockProps) {
             margin: 0,
             padding: 18,
             overflowX: "auto",
-            fontFamily: "'JetBrains Mono','Fira Code','Cascadia Code',monospace",
+            fontFamily:
+              "'JetBrains Mono','Fira Code','Cascadia Code',monospace",
             fontSize: 13,
             lineHeight: 1.75,
             color: "#D4D4D4",
@@ -93,7 +94,15 @@ interface CodeEditorProps {
   expectedLogs: string[];
 }
 
-export function CodeEditor({ code, onChange, onRun, running, result, correct, expectedLogs }: CodeEditorProps) {
+export function CodeEditor({
+  code,
+  onChange,
+  onRun,
+  running,
+  result,
+  correct,
+  expectedLogs,
+}: CodeEditorProps) {
   const ref = useRef<HTMLTextAreaElement>(null);
 
   // Auto-grow height without jumping the page scroll position
@@ -111,16 +120,34 @@ export function CodeEditor({ code, onChange, onRun, running, result, correct, ex
       e.preventDefault();
       const el = e.currentTarget;
       const s = el.selectionStart;
-      const next = el.value.slice(0, s) + "  " + el.value.slice(el.selectionEnd);
+      const next =
+        el.value.slice(0, s) + "  " + el.value.slice(el.selectionEnd);
       onChange(next);
-      requestAnimationFrame(() => { el.selectionStart = el.selectionEnd = s + 2; });
+      requestAnimationFrame(() => {
+        el.selectionStart = el.selectionEnd = s + 2;
+      });
     }
   }
 
   return (
     <div style={{ marginBottom: 16 }}>
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 7 }}>
-        <div style={{ fontSize: 11, letterSpacing: 1.2, textTransform: "uppercase", fontWeight: 600, color: "#444" }}>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+          marginBottom: 7,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            letterSpacing: 1.2,
+            textTransform: "uppercase",
+            fontWeight: 600,
+            color: "#444",
+          }}
+        >
           Your fix
         </div>
         <button
@@ -145,7 +172,7 @@ export function CodeEditor({ code, onChange, onRun, running, result, correct, ex
       <textarea
         ref={ref}
         value={code}
-        onChange={e => onChange(e.target.value)}
+        onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         spellCheck={false}
         style={{
@@ -167,44 +194,95 @@ export function CodeEditor({ code, onChange, onRun, running, result, correct, ex
         }}
       />
       {result && (
-        <div style={{
-          marginTop: 8,
-          background: "#0A0A12",
-          border: `1px solid ${correct === true ? "#1E4A30" : correct === false ? "#3A1825" : result.error ? "#3A1825" : "#1A2A1A"}`,
-          borderRadius: 8,
-          padding: "12px 16px",
-          fontFamily: "'JetBrains Mono','Fira Code','Cascadia Code',monospace",
-          fontSize: 12,
-          lineHeight: 1.7,
-        }}>
+        <div
+          style={{
+            marginTop: 8,
+            background: "#0A0A12",
+            border: `1px solid ${correct === true ? "#1E4A30" : correct === false ? "#3A1825" : result.error ? "#3A1825" : "#1A2A1A"}`,
+            borderRadius: 8,
+            padding: "12px 16px",
+            fontFamily:
+              "'JetBrains Mono','Fira Code','Cascadia Code',monospace",
+            fontSize: 12,
+            lineHeight: 1.7,
+          }}
+        >
           {correct === true && (
-            <div style={{ color: "#4EC9B0", fontWeight: 600, marginBottom: result.logs.length ? 8 : 0 }}>
+            <div
+              style={{ color: "#4EC9B0", fontWeight: 600, marginBottom: 10 }}
+            >
               ✓ Output matches — looks correct!
             </div>
           )}
           {correct === false && !result.error && (
-            <div style={{ color: "#B06070", fontWeight: 600, marginBottom: result.logs.length ? 8 : 0 }}>
-              ✕ Output doesn't match the expected fix yet
+            <div
+              style={{ color: "#B06070", fontWeight: 600, marginBottom: 10 }}
+            >
+              ✕ Not quite yet
             </div>
           )}
-          {result.logs.length === 0 && !result.error && correct === null && (
-            <span style={{ color: "#404050" }}>No output</span>
-          )}
-          {result.logs.map((line, i) => (
-            <div key={i} style={{ color: "#A0CFA0" }}>{line}</div>
-          ))}
-          {result.error && (
-            <div style={{ color: "#B06070", marginTop: result.logs.length ? 8 : 0 }}>
-              ✕ {result.error}
-            </div>
-          )}
-          {correct === false && expectedLogs.length > 0 && (
-            <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid #1E1E2A" }}>
-              <div style={{ color: "#505060", marginBottom: 4, fontSize: 11, letterSpacing: 0.5 }}>EXPECTED</div>
-              {expectedLogs.map((line, i) => (
-                <div key={i} style={{ color: "#606070" }}>{line}</div>
+
+          {/* Always show actual vs expected when we have both */}
+          {expectedLogs.length > 0 ? (
+            <>
+              <div style={{ marginBottom: 8 }}>
+                <div
+                  style={{
+                    color: "#505060",
+                    fontSize: 11,
+                    letterSpacing: 0.5,
+                    marginBottom: 4,
+                  }}
+                >
+                  ACTUAL
+                </div>
+                {result.logs.length === 0 && !result.error && (
+                  <div style={{ color: "#404050" }}>No output</div>
+                )}
+                {result.logs.map((line, i) => (
+                  <div
+                    key={i}
+                    style={{ color: correct === true ? "#4EC9B0" : "#A0CFA0" }}
+                  >
+                    {line}
+                  </div>
+                ))}
+                {result.error && (
+                  <div style={{ color: "#B06070" }}>✕ {result.error}</div>
+                )}
+              </div>
+              <div style={{ paddingTop: 8, borderTop: "1px solid #1E1E2A" }}>
+                <div
+                  style={{
+                    color: "#505060",
+                    fontSize: 11,
+                    letterSpacing: 0.5,
+                    marginBottom: 4,
+                  }}
+                >
+                  EXPECTED
+                </div>
+                {expectedLogs.map((line, i) => (
+                  <div key={i} style={{ color: "#606070" }}>
+                    {line}
+                  </div>
+                ))}
+              </div>
+            </>
+          ) : (
+            <>
+              {result.logs.length === 0 && !result.error && (
+                <span style={{ color: "#404050" }}>No output</span>
+              )}
+              {result.logs.map((line, i) => (
+                <div key={i} style={{ color: "#A0CFA0" }}>
+                  {line}
+                </div>
               ))}
-            </div>
+              {result.error && (
+                <div style={{ color: "#B06070" }}>✕ {result.error}</div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -236,7 +314,15 @@ export function Badge({ label }: { label: string }) {
 
 // ─── Skeleton / shimmer ───────────────────────────────────────────────────────
 
-function Shimmer({ h = 14, w = "100%", mb = 12 }: { h?: number; w?: string | number; mb?: number }) {
+function Shimmer({
+  h = 14,
+  w = "100%",
+  mb = 12,
+}: {
+  h?: number;
+  w?: string | number;
+  mb?: number;
+}) {
   return (
     <div
       style={{

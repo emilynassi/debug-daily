@@ -44,6 +44,10 @@ export function runCode(code: string): Promise<RunResult> {
       (async function(console) {
         ${js}
       })(_console).then(function() {
+        // Wait 1s after the async code settles so pending setTimeout callbacks
+        // (common in async/race-condition challenges) have a chance to fire.
+        return new Promise(function(r) { setTimeout(r, 1000); });
+      }).then(function() {
         self.postMessage({ type: 'done' });
       }).catch(function(e) {
         self.postMessage({ type: 'error', message: e.message });
@@ -64,8 +68,8 @@ export function runCode(code: string): Promise<RunResult> {
     }
 
     const timer = setTimeout(() => {
-      finish({ logs, error: "Timed out after 3s" });
-    }, 3000);
+      finish({ logs, error: "Timed out after 5s" });
+    }, 5000);
 
     worker.onmessage = (e: MessageEvent) => {
       const { type, text, message } = e.data as { type: string; text?: string; message?: string };
