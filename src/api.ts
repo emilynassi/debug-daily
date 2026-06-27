@@ -31,7 +31,6 @@ export async function generateChallenge(): Promise<Challenge> {
   // Claude occasionally HTML-encodes quotes inside JSON strings; decode them.
   challenge.buggyCode = decodeEntities(challenge.buggyCode);
   challenge.fix = decodeEntities(challenge.fix);
-  challenge.expectedOutput = decodeEntities(challenge.expectedOutput ?? "");
 
   return challenge;
 }

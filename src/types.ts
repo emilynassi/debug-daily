@@ -5,7 +5,6 @@ export interface Challenge {
   buggyCode: string;
   hint: string;
   fix: string;
-  expectedOutput: string;
   concepts: string[];
 }
 

@@ -9,13 +9,63 @@ function transpile(code: string): string {
   const result = ts.transpileModule(code, {
     compilerOptions: {
       target: ts.ScriptTarget.ES2020,
-      module: ts.ModuleKind.None,
+      module: ts.ModuleKind.CommonJS,
       strict: false,
     },
     reportDiagnostics: false,
   });
   return result.outputText;
 }
+
+// Injected into every Worker so CommonJS output from the transpiler has a
+// require() shim and Vue / React / common modules resolve to simple mocks.
+const SHIM = `
+var exports = {};
+var module = { exports: exports };
+var require = (function() {
+  var _ref = function(v) {
+    return Object.defineProperty({}, 'value', {
+      get: function() { return v; },
+      set: function(n) { v = n; },
+      enumerable: true,
+    });
+  };
+  var _computed = function(fn) {
+    var getter = typeof fn === 'function' ? fn : fn.get;
+    return Object.defineProperty({}, 'value', { get: getter, enumerable: true });
+  };
+  var _vue = {
+    reactive: function(o) { return o; },
+    ref: _ref,
+    computed: _computed,
+    watch: function() {},
+    watchEffect: function(fn) { fn(); },
+    onMounted: function() {},
+    onUnmounted: function() {},
+    onBeforeUnmount: function() {},
+    defineComponent: function(o) { return o; },
+    nextTick: function(fn) { return Promise.resolve().then(fn); },
+    toRefs: function(o) { return o; },
+    toRef: function(o, k) { return _ref(o[k]); },
+  };
+  var _useState = function(init) {
+    var v = typeof init === 'function' ? init() : init;
+    return [v, function(n) { v = typeof n === 'function' ? n(v) : n; }];
+  };
+  var _react = {
+    useState: _useState,
+    useEffect: function(fn) { fn(); },
+    useCallback: function(fn) { return fn; },
+    useMemo: function(fn) { return fn(); },
+    useRef: function(init) { return { current: init }; },
+    useContext: function() { return {}; },
+    createContext: function(def) { return { _default: def }; },
+    default: { createElement: function() { return null; } },
+  };
+  var mocks = { vue: _vue, react: _react };
+  return function(mod) { return mocks[mod] || {}; };
+})();
+`;
 
 export function runCode(code: string): Promise<RunResult> {
   let js: string;
@@ -30,6 +80,7 @@ export function runCode(code: string): Promise<RunResult> {
     let settled = false;
 
     const workerSrc = `
+      ${SHIM}
       var _console = {
         log: function() {
           var text = Array.prototype.slice.call(arguments).map(function(a) {
@@ -44,8 +95,6 @@ export function runCode(code: string): Promise<RunResult> {
       (async function(console) {
         ${js}
       })(_console).then(function() {
-        // Wait 1s after the async code settles so pending setTimeout callbacks
-        // (common in async/race-condition challenges) have a chance to fire.
         return new Promise(function(r) { setTimeout(r, 1000); });
       }).then(function() {
         self.postMessage({ type: 'done' });

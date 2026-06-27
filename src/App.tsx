@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import type { Challenge } from "./types";
 import { generateChallenge } from "./api";
 import { loadStore, loadTodayState, saveStore, todayKey, yesterdayKey } from "./storage";
@@ -21,6 +21,7 @@ export default function App() {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [expectedLogs, setExpectedLogs] = useState<string[]>([]);
   const [isRunning, setIsRunning] = useState(false);
+  const fixLogsCache = useRef<string[] | null>(null); // cached fix output for current challenge
   const [streak, setStreak] = useState(stored.streak ?? 0);
   const [lastKey, setLastKey] = useState<string | null>(stored.lastKey ?? null);
   const [total, setTotal] = useState(stored.total ?? 0);
@@ -47,6 +48,7 @@ export default function App() {
       setRunResult(null);
       setIsCorrect(null);
       setExpectedLogs([]);
+      fixLogsCache.current = null;
       saveStore({ [todayKey()]: { challenge: next, hintShown: false, solved: false } });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
@@ -88,14 +90,21 @@ export default function App() {
     setIsCorrect(null);
     setExpectedLogs([]);
 
-    const userResult = await runCode(userCode);
+    // Run fix once and cache it; subsequent runs reuse the result
+    const [userResult, fixLogs] = await Promise.all([
+      runCode(userCode),
+      fixLogsCache.current !== null
+        ? Promise.resolve(fixLogsCache.current)
+        : runCode(challenge!.fix).then(r => { fixLogsCache.current = r.logs; return r.logs; }),
+    ]);
+
     setRunResult(userResult);
 
-    const expected = challenge!.expectedOutput;
-    if (expected && !userResult.error) {
-      const expectedLines = [expected];
-      setExpectedLogs(expectedLines);
-      setIsCorrect(userResult.logs.join('\n').trim() === expected.trim());
+    if (fixLogs.length > 0) {
+      setExpectedLogs(fixLogs);
+      if (!userResult.error) {
+        setIsCorrect(JSON.stringify(userResult.logs) === JSON.stringify(fixLogs));
+      }
     }
 
     setIsRunning(false);

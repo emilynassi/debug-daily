@@ -58,8 +58,7 @@ Schema:
   "task": "One clear sentence telling the user exactly what to fix.",
   "buggyCode": "Self-contained JS or TS snippet, 20–40 lines. Show at least two layers interacting (e.g. a mock API response + the function that consumes it, or a hook + the transform it calls). Use realistic domain names: cart, order, invoice, user, auth, dashboard, feed, notification, etc. End with a console.log that shows the wrong output so the user can run it and immediately see the problem.",
   "hint": "One sentence pointing toward which layer or assumption is wrong, without naming the fix.",
-  "fix": "The corrected snippet with a 1–2 line comment explaining exactly what contract was violated and why.",
-  "expectedOutput": "The exact string(s) that console.log prints after the fix — e.g. 'Final total: 113.44'. Must match what running the fixed buggyCode would actually log.",
+  "fix": "The COMPLETE corrected program — same structure and console.log calls as buggyCode, but with the bug fixed and a short comment explaining what was wrong and why. Must be fully runnable on its own, not just the changed function.",
   "concepts": ["2–4 short concept tags"]
 }
 
