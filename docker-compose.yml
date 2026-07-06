@@ -1,0 +1,8 @@
+services:
+  debug-daily:
+    build: .
+    ports:
+      - "8080:3000"
+    environment:
+      - VITE_ANTHROPIC_API_KEY=${VITE_ANTHROPIC_API_KEY}
+    restart: unless-stopped

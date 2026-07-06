@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
           rewrite: (path) => path.replace(/^\/api\/anthropic/, ''),
           configure: (proxy) => {
             proxy.on('proxyReq', (proxyReq) => {
-              const apiKey = env.VITE_ANTHROPIC_API_KEY
+              const apiKey = env.ANTHROPIC_API_KEY
               if (apiKey) {
                 proxyReq.setHeader('x-api-key', apiKey)
                 proxyReq.setHeader('anthropic-version', '2023-06-01')
