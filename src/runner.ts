@@ -10,18 +10,15 @@ function transpile(code: string): string {
     compilerOptions: {
       target: ts.ScriptTarget.ES2020,
       module: ts.ModuleKind.CommonJS,
-      jsx: ts.JsxEmit.React,
       strict: false,
     },
-    // .tsx so JSX parses; angle-bracket type assertions must use `as` instead
-    fileName: "module.tsx",
     reportDiagnostics: false,
   });
   return result.outputText;
 }
 
 // Injected into every Worker so CommonJS output from the transpiler has a
-// require() shim and Vue / React / common modules resolve to simple mocks.
+// require() shim and Vue resolves to a simple mock.
 const SHIM = `
 var exports = {};
 var module = { exports: exports };
@@ -51,25 +48,7 @@ var require = (function() {
     toRefs: function(o) { return o; },
     toRef: function(o, k) { return _ref(o[k]); },
   };
-  var _useState = function(init) {
-    var v = typeof init === 'function' ? init() : init;
-    return [v, function(n) { v = typeof n === 'function' ? n(v) : n; }];
-  };
-  var _react = {
-    useState: _useState,
-    useEffect: function(fn) { fn(); },
-    useCallback: function(fn) { return fn; },
-    useMemo: function(fn) { return fn(); },
-    useRef: function(init) { return { current: init }; },
-    useContext: function() { return {}; },
-    createContext: function(def) { return { _default: def }; },
-    memo: function(c) { return c; },
-    forwardRef: function(c) { return c; },
-    createElement: function() { return null; },
-    Fragment: 'Fragment',
-  };
-  _react.default = _react;
-  var mocks = { vue: _vue, react: _react };
+  var mocks = { vue: _vue };
   return function(mod) { return mocks[mod] || {}; };
 })();
 `;
