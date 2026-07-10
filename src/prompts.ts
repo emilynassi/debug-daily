@@ -66,6 +66,7 @@ Rules:
 - The bug must come from a wrong assumption at a boundary — a misread API contract, a field renamed between layers, a type that's wider than expected, a timing assumption that doesn't hold
 - Subtle but not sneaky: a careful developer reading slowly should be able to find it
 - TypeScript challenges: start with a type that's too loose (any, object, missing field) and have the fix tighten it so the bug becomes a compile error
+- No JSX and no rendering — demonstrate React/Vue bugs through hooks, composables, and plain functions, with a plain-JS simulation of the buggy behavior that ends in console.log. The snippet is graded by its console output alone
 - No real network calls — inline a realistic-looking hardcoded response object
 - Always include the console.log showing wrong output in buggyCode
 - One bug per challenge`;

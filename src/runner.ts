@@ -10,8 +10,11 @@ function transpile(code: string): string {
     compilerOptions: {
       target: ts.ScriptTarget.ES2020,
       module: ts.ModuleKind.CommonJS,
+      jsx: ts.JsxEmit.React,
       strict: false,
     },
+    // .tsx so JSX parses; angle-bracket type assertions must use `as` instead
+    fileName: "module.tsx",
     reportDiagnostics: false,
   });
   return result.outputText;
@@ -60,8 +63,12 @@ var require = (function() {
     useRef: function(init) { return { current: init }; },
     useContext: function() { return {}; },
     createContext: function(def) { return { _default: def }; },
-    default: { createElement: function() { return null; } },
+    memo: function(c) { return c; },
+    forwardRef: function(c) { return c; },
+    createElement: function() { return null; },
+    Fragment: 'Fragment',
   };
+  _react.default = _react;
   var mocks = { vue: _vue, react: _react };
   return function(mod) { return mocks[mod] || {}; };
 })();
