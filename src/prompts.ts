@@ -15,10 +15,11 @@ export const CHALLENGE_TYPES = [
   "TypeScript: overly-broad type (any or object) lets a wrong value pass through; narrow it to catch the bug",
   "TypeScript: write the missing interface for an API response object so a silent field access bug becomes a compile error",
 
-  // Vue bugs
-  "Vue: reactive object mutated directly instead of via assignment loses reactivity",
-  "Vue: computed property with a side effect or missing dependency returns stale value",
-  "Vue composable: ref value accessed without .value inside a function, returning undefined",
+  // Vue bugs (challenges run against the real vue package — the bug must actually reproduce in Vue 3)
+  "Vue: destructuring or spreading a reactive() object copies plain values, so later mutations to the source never reach the copies (fix: toRefs or computed)",
+  "Vue: computed that reads a plain non-reactive variable caches once and returns a stale value after that variable changes (fix: make the source a ref)",
+  "Vue composable: ref used without .value inside a function — math or string ops silently operate on the ref object itself (NaN or [object Object])",
+  "Vue: watch given a plain property value (obj.prop) instead of a getter function, so the callback never fires on change",
 
   // General JS runtime bugs
   "stale closure — a callback closes over a loop variable and all iterations share the last value",
@@ -38,7 +39,7 @@ export const SYSTEM_PROMPT = `You are a debugging challenge generator for a JS/T
 The best challenges live at the SEAMS between layers: where an API response hands off to a transform function, where a transform hands off to a component, where one piece of state feeds another. That's where real bugs hide. Examples of good seam scenarios:
 - The API returns { full_name } but the component reads user.name — renders blank, no error
 - A .map() over orders returns the right count but drops the price field — total is always NaN
-- A Vue composable returns a ref but the caller destructures it, losing reactivity
+- A Vue composable returns a reactive object and the caller destructures it, losing reactivity
 - A TypeScript interface says email is string but the API can return null — crashes on .toLowerCase()
 
 Generate ONE challenge. Return ONLY valid JSON — no markdown fences, no explanation, nothing outside the JSON object.
@@ -58,7 +59,8 @@ Rules:
 - The bug must come from a wrong assumption at a boundary — a misread API contract, a field renamed between layers, a type that's wider than expected, a timing assumption that doesn't hold
 - Subtle but not sneaky: a careful developer reading slowly should be able to find it
 - TypeScript challenges: start with a type that's too loose (any, object, missing field) and have the fix tighten it so the bug becomes a compile error
-- No JSX, no templates, no rendering — demonstrate Vue bugs through composables and plain functions, with a plain-JS simulation of the buggy behavior that ends in console.log. The snippet is graded by its console output alone
+- No JSX, no templates, no component rendering — demonstrate Vue bugs through composables and plain functions
+- Vue challenges run against the REAL vue package: import what you need from 'vue' (reactive, ref, computed, watch, nextTick) and use it directly. NEVER simulate, stub, or re-implement reactivity — the runtime executes real Vue, and the buggy output must come from Vue's actual behavior. If a watcher needs to flush, await nextTick()
 - No real network calls — inline a realistic-looking hardcoded response object
 - Always include the console.log showing wrong output in buggyCode
 - One bug per challenge`;
